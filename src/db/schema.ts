@@ -1,5 +1,4 @@
 import { relations } from "drizzle-orm";
-import { time } from "drizzle-orm/mysql-core";
 import { pgTable, text, timestamp, boolean, index, integer, primaryKey } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -13,6 +12,7 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
 });
 
 export const session = pgTable(

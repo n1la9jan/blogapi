@@ -99,6 +99,7 @@ export const blogRoutes = new Elysia({ prefix: "/blogs" })
       }).returning();
     return { data: newBlog }
   }, { auth: true, body: CreateBlogBody })
+// TODO: PATCH & DELETE
 
 
 
