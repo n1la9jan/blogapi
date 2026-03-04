@@ -82,7 +82,7 @@ export const blog = pgTable("blog", {
   slug: text("slug").notNull().unique(),
   content: text("content").notNull(),
   excerpt: text("excerpt"),
-  coverImage: text("cover_image_key"),
+  coverImageKey: text("cover_image_key"),
   coverImageUrl: text("cover_image_url"),
   published: boolean("published").notNull().default(false),
   publihsedAt: timestamp("published_at"),
