@@ -42,3 +42,17 @@ export async function generatePresignedUrl(opts: {
 
   return { uploadURL, publicURL };
 }
+
+export async function deleteObject(key: string): Promise<void> {
+  await s3.send(
+    new DeleteObjectCommand({
+      Bucket: BUCKET,
+      Key: key
+    })
+  );
+}
+
+export function buildImageKey(blogID: string, fileName: string): string {
+  const sanitized = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  return `blogs/${blogID}/images/${Date.now()}-${sanitized}`;
+}
