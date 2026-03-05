@@ -6,7 +6,7 @@ import * as schema from "../db/schema";
 
 export const auth = betterAuth({
   secret: env.betterAuthSecret!,
-  baseURL: env.domainURL,
+  baseURL: env.betterAuthBaseURL,
 
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -17,6 +17,7 @@ export const auth = betterAuth({
       verification: schema.verification
     }
   }),
+  trustedOrigins: ["http://localhost:5173", env.domainURL!, "http://localhost:3000"],
 
   emailAndPassword: {
     enabled: true,
@@ -28,7 +29,6 @@ export const auth = betterAuth({
       clientSecret: env.googleClientSecret!
     },
   },
-
   advanced: {
     defaultCookieAttributes: {
       httpOnly: true,

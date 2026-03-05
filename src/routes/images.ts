@@ -29,7 +29,6 @@ const ImageIdParam = t.Object({ id: t.String() });
 export const imageRoutes = new Elysia({ prefix: "/images" })
   .use(betterAuthPlugin)
   .post("/presign", async ({ body, user, error }) => {
-    if (!user.isAdmin) return error(403, { message: "Admin only" });
 
     const post = await db.query.blog.findFirst({
       where: eq(blog.id, body.blogID),
@@ -43,7 +42,6 @@ export const imageRoutes = new Elysia({ prefix: "/images" })
     return { uploadURL, publicURL, key };
   }, { auth: true, body: RequestPresignedURL })
   .post("/confirm", async ({ body, user, error }) => {
-    if (!user.isAdmin) return error(403, { message: "Admin only" });
     const post = await db.query.blog.findFirst({
       where: eq(blog.id, body.blogID),
     });

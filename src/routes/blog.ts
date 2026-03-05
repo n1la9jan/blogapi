@@ -1,9 +1,9 @@
 import Elysia, { t } from "elysia";
 import { db } from "../db";
-import { blog, blogImage, blogReaction, REACTION_TYPES } from "../db/schema";
+import { blog, REACTION_TYPES } from "../db/schema";
 import { betterAuthPlugin } from "../plugins/betterAuth";
 import { generateID, generateSlug } from "../lib/utils";
-import { count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 
 const CreateBlogBody = t.Object({
   title: t.String({ minLength: 3, maxLength: 200 }),
@@ -56,27 +56,49 @@ export const blogRoutes = new Elysia({ prefix: "/blogs" })
       .where(eq(blog.published, true))
     return { data: rows, total, page, limit };
   }, { query: ListBlogQuery })
-  .get("/admin", async ({ query, user, error }) => {
-    if (!user.isAdmin) return error(403, { message: "Admin only" });
+  .get("/mine", async ({ query, user }) => {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const offset = (page - 1) * limit;
 
     const rows = await db.query.blog.findMany({
+      where: eq(blog.authorId, user.id),
       orderBy: [desc(blog.createdAt)],
       limit,
       offset,
       with: {
-        author: { columns: { id: true, name: true, image: true } },
-        images: true,
+        images: { columns: { id: true, url: true, fileName: true } },
         reactions: true
       },
     })
-    const [{ total }] = await db.select({ total: count() }).from(blog);
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(blog)
+      .where(eq(blog.authorId, user.id))
     return { data: rows, total, page, limit };
   }, { auth: true, query: ListBlogQuery })
+  .get("/:slug", async ({ params, error }) => {
+    const post = await db.query.blog.findFirst({
+      where: and(eq(blog.slug, params.slug), eq(blog.published, true)),
+      with: {
+        author: { columns: { id: true, name: true, image: true } },
+        images: true,
+        reactions: true,
+      },
+    });
+    if (!post) return error(404, { message: "Blog not found" });
+
+    const reactionsCount = REACTION_TYPES.reduce(
+      (acc, type) => {
+        acc[type] = post.reactions.filter((r) => r.reaction === type).length;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
+    return { ...post, reactionsCount };
+  }, { params: SlugParam })
   .post("/", async ({ body, user, error }) => {
-    if (!user.isAdmin) return error(403, { message: "Admins only" });
+    console.log("route is getting hit")
     const id = generateID();
     const slug = generateSlug(body.title);
     const now = new Date();
@@ -97,9 +119,30 @@ export const blogRoutes = new Elysia({ prefix: "/blogs" })
         createdAt: now,
         updatedAt: now
       }).returning();
+    console.log(newBlog)
     return { data: newBlog }
   }, { auth: true, body: CreateBlogBody })
-// TODO: PATCH & DELETE
+  .patch("/:id", async ({ params, body, user, error }) => {
+    const existing = await db.query.blog.findFirst({ where: eq(blog.id, params.id) });
+    if (!existing) return error(404, { message: "Blog not found" });
+    if (existing.authorId !== user.id) return error(403, { message: "Not owner" });
+
+    const now = new Date();
+    const [updated] = await db.update(blog).set({
+      ...body,
+      publihsedAt: body.published && !existing.published ? now : existing.publihsedAt,
+      updatedAt: now
+    }).where(eq(blog.id, params.id)).returning();
+    return { data: updated };
+  }, { auth: true, body: UpdateBlogBody, params: BlogIdParam })
+  .delete("/:id", async ({ params, user, error }) => {
+    const existing = await db.query.blog.findFirst({ where: eq(blog.id, params.id) });
+    if (!existing) return error(404, { message: "Blog not found" });
+    if (existing.authorId !== user.id) return error(403, { message: "Not owner" });
+
+    await db.delete(blog).where(eq(blog.id, params.id));
+    return { success: true };
+  }, { auth: true, params: BlogIdParam })
 
 
 

@@ -12,7 +12,7 @@ export const betterAuthPlugin = new Elysia({ name: "better-auth" })
         }
 
         return {
-          user: session.user as typeof session.user & { isAdmin: boolean },
+          user: session.user,
           session: session.session
         };
       },
