@@ -39,3 +39,4 @@ export const userRoutes = new Elysia({ prefix: "/users" })
       })
     return { data: updated };
   }, { auth: true, params: UserIdParam })
+// TODO: ADD revoke admin
