@@ -1,10 +1,10 @@
-import { DeleteObjectCommand, PutObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "../config";
 
 export const s3 = new S3Client({
   endpoint: env.endpointURL!,
-  region: "eu-central-003",
+  region: "auto",
   credentials: {
     accessKeyId: env.accessKeyId!,
     secretAccessKey: env.secretAccessKey!,
