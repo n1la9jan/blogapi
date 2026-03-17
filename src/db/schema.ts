@@ -73,6 +73,22 @@ export const verification = pgTable(
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
+export const CATEGORIES = [
+  { slug: "technology", label: "Technology" },
+  { slug: "programming", label: "Programming" },
+  { slug: "design", label: "Design" },
+  { slug: "career", label: "Career" },
+  { slug: "personal", label: "Personal" },
+] as const;
+
+export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
+
+export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug) as [
+  CategorySlug,
+  ...CategorySlug[],
+];
+
+
 //Blog tables
 
 export const blog = pgTable("blog", {
@@ -83,6 +99,7 @@ export const blog = pgTable("blog", {
   excerpt: text("excerpt"),
   coverImageKey: text("cover_image_key"),
   coverImageUrl: text("cover_image_url"),
+  category: text("category").$type<CategorySlug>().notNull(),
   published: boolean("published").notNull().default(false),
   publihsedAt: timestamp("published_at"),
   authorId: text("author_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -115,8 +132,10 @@ export const blogReaction = pgTable("blog_reaction", {
 )
 
 export const userRelations = relations(user, ({ many }) => ({
+  blogs: many(blog),
   sessions: many(session),
   accounts: many(account),
+  reactions: many(blogReaction)
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
