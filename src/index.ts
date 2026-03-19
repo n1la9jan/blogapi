@@ -6,6 +6,7 @@ import { blogRoutes } from "./routes/blog";
 import { imageRoutes } from "./routes/images";
 import { reactionRoutes } from "./routes/reactions";
 import { userRoutes } from "./routes/users";
+import { commentRoutes } from "./routes/comments";
 
 const PORT = Number(process.env.PORT ?? 3000)
 const app = new Elysia()
@@ -27,6 +28,7 @@ const app = new Elysia()
   .use(imageRoutes)
   .use(reactionRoutes)
   .use(userRoutes)
+  .use(commentRoutes)
   .listen(PORT)
 
 console.log(

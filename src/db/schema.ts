@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+import { time } from "drizzle-orm/mysql-core";
 import { pgTable, text, timestamp, boolean, index, integer, primaryKey } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -131,6 +132,15 @@ export const blogReaction = pgTable("blog_reaction", {
 })
 )
 
+export const blogComment = pgTable("blog_comment", {
+  id: text("id").primaryKey(),
+  blogId: text("blog_id").notNull().references(() => blog.id, { onDelete: "cascade" }),
+  authorId: text("author_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
+})
+
 export const userRelations = relations(user, ({ many }) => ({
   blogs: many(blog),
   sessions: many(session),
@@ -167,4 +177,9 @@ export const blogImageRelations = relations(blogImage, ({ one }) => ({
 export const blogReactionRelations = relations(blogReaction, ({ one }) => ({
   user: one(user, { fields: [blogReaction.userId], references: [user.id] }),
   blog: one(blog, { fields: [blogReaction.blogId], references: [blog.id] }),
+}));
+
+export const blogCommentRelations = relations(blogComment, ({ one }) => ({
+  blog: one(blog, { fields: [blogComment.blogId], references: [blog.id] }),
+  author: one(user, { fields: [blogComment.authorId], references: [user.id] }),
 }));
